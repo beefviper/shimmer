@@ -1,0 +1,187 @@
+// main.cpp
+// Shimmer
+// author: beefviper
+// date: July 24, 2025
+
+#include <iostream>
+#include <string>
+#include <vector>
+#include <filesystem>
+#include <fstream>
+
+#include <Windows.h>
+
+std::string name{ "shimmer" };
+std::string registryKey{ "Software\\Shimmer" };
+std::string registryValue{ "InstallPath" };
+
+std::string registryReadKey(const std::string& key, const std::string& value);
+void registryWriteKey(const std::string& key, const std::string& value, const std::string& data);
+void registryClearKey(const std::string& key, const std::string& value);
+std::string userPathGet();
+bool userPathContains(const std::string& path);
+bool userPathRemove(const std::string& path);
+void printHelp();
+
+int main(int argc, char* argv[])
+{
+	char exePathRaw[MAX_PATH];
+	GetModuleFileNameA(NULL, exePathRaw, MAX_PATH);
+
+	std::filesystem::path exePath(exePathRaw);
+	std::string shimName = exePath.stem().string();
+	std::filesystem::path shimDir = exePath.parent_path();
+	std::filesystem::path iniPath = shimDir / "shimmer.ini";
+
+	if (_stricmp(shimName.c_str(), "shimmer") == 0 && argc < 2) {
+		printHelp();
+		return 0;
+	}
+
+	if (argc == 2)
+	{
+		std::string cmd{ argv[1] };
+
+		if (cmd == "--install")
+		{
+			std::string shimmerInstallPath = registryReadKey("Software\\shimmer", "InstallPath");
+			std::string currentPath = shimDir.string();
+
+			
+		}
+	}
+
+}
+
+std::string registryReadKey(const std::string& key, const std::string& value)
+{
+	std::string result{};
+
+	HKEY hkey{};
+	char buffer[MAX_PATH]{};
+	DWORD size = sizeof(buffer);
+
+
+	if (RegOpenKeyExA(HKEY_CURRENT_USER, key.c_str(), 0, KEY_READ, &hkey) == ERROR_SUCCESS)
+	{
+		DWORD type = 0;
+		if (RegQueryValueExA(hkey, value.c_str(), nullptr, &type, (LPBYTE)buffer, &size) == ERROR_SUCCESS && type == REG_SZ)
+		{
+			if (size > 0 && buffer[size - 1] == '\0')
+			{
+				--size;
+			}
+
+			result.assign(buffer, size);
+		}
+		else
+		{
+			std::cerr << "Failed to read registry value or value is not a string: " << value << std::endl;
+		}
+		RegCloseKey(hkey);
+	}
+	else
+	{
+		std::cerr << "Failed to open registry key: " << key << std::endl;
+	}
+
+	return result;
+}
+
+void registryWriteKey(const std::string& key, const std::string& value, const std::string& data)
+{
+	HKEY hkey{};
+
+	if (RegCreateKeyExA(HKEY_CURRENT_USER, key.c_str(), 0, nullptr, 0, KEY_WRITE, nullptr, &hkey, nullptr) == ERROR_SUCCESS)
+	{
+		const BYTE* dataPtr = reinterpret_cast<const BYTE*>(data.c_str());
+		DWORD dataSize = static_cast<DWORD>(data.size() + 1); // +1 for null terminator
+		if (RegSetValueExA(hkey, value.c_str(), 0, REG_SZ, dataPtr, dataSize) != ERROR_SUCCESS)
+		{
+			std::cerr << "Failed to write registry value: " << value << std::endl;
+		}
+		RegCloseKey(hkey);
+	}
+	else
+	{
+		std::cerr << "Failed to create or open registry key: " << key << std::endl;
+	}
+}
+
+void registryClearKey(const std::string& key, const std::string& value)
+{
+	HKEY hkey{};
+
+	if (RegOpenKeyExA(HKEY_CURRENT_USER, key.c_str(), 0, KEY_SET_VALUE, &hkey) == ERROR_SUCCESS)
+	{
+		const char empty[] = "";
+		const BYTE* emptyString = reinterpret_cast<const BYTE*>(empty);
+		if (RegSetValueExA(hkey, value.c_str(), 0, REG_SZ, emptyString, 1) != ERROR_SUCCESS)
+		{
+			std::cerr << "Failed to delete registry value: " << value << std::endl;
+		}
+		RegCloseKey(hkey);
+	}
+	else
+	{
+		std::cerr << "Failed to open registry key: " << key << std::endl;
+	}
+}
+
+std::string userPathGet()
+{
+	std::string result;
+
+	char* buffer = nullptr;
+	size_t len = 0;
+	if (_dupenv_s(&buffer, &len, "PATH") == 0 && buffer)
+	{
+		result = buffer;
+		free(buffer);
+	}
+
+	return result;
+}
+
+bool userPathContains(const std::string& path)
+{
+	bool result = false;
+
+	std::string currentPath = userPathGet();
+	if (currentPath.find(path) != std::string::npos)
+	{
+		return false;
+	}
+
+
+
+	return result;
+}
+
+bool userPathRemove(const std::string& path)
+{
+	bool result = false;
+
+
+
+	return result;
+}
+
+void printHelp()
+{
+	std::cout << R"(
+shimmer: Single EXE-based portable app shim system
+
+Usage:
+  shimmer.exe                   Show this help
+  shimmer.exe --install        Add current directory to user PATH
+  shimmer.exe --uninstall      Remove current directory from PATH
+  shimmer.exe --init           Create a default shims.ini file
+  shimmer.exe --list           List registered shims
+  shimmer.exe --add <target>   Register current exe name to <target>
+  shimmer.exe --remove         Remove current shim entry
+  shimmer.exe --create <name> <target> [wait|detached]
+  shimmer.exe --rebuild        Recreate .exe stubs for all INI entries
+  shimmer.exe --version        Print version number
+)";
+}
