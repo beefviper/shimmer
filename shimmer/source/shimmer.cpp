@@ -6,6 +6,7 @@
 #include "shimmer.hpp"
 
 #include <iostream>
+#include <string>
 
 #include "mode.hpp"
 
@@ -93,7 +94,20 @@ Shimmer::Shimmer(int argc, char* argv[])
 	}
 	else if (command == "--remove")
 	{
-		remove();
+		std::string target = currentExeName;
+
+		if (argc > 2)
+		{
+			target = argv[2];
+		}
+
+		if (target == "shimmer")
+		{
+					MessageBoxA(NULL, "Cannot remove the shimmer executable itself.", "Error", MB_OK | MB_ICONERROR);
+					return;
+		}
+
+		remove(target);
 	}
 	else if (command == "--list")
 	{
@@ -210,9 +224,9 @@ void Shimmer::update(const std::string& target, ShimMode mode)
 	ini->add({ currentExeName, target, mode });
 }
 
-void Shimmer::remove()
+void Shimmer::remove(std::string target)
 {
-	ini->remove(currentExeName);
+	ini->remove(target);
 }
 
 void Shimmer::list()

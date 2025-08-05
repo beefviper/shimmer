@@ -102,9 +102,11 @@ std::string Path::joinEnvPaths(const std::vector<std::filesystem::path>& pathLis
 
 void Path::broadcastChange()
 {
+/*
 	SendMessageTimeoutA(HWND_BROADCAST, WM_SETTINGCHANGE, 0,
 		reinterpret_cast<LPARAM>("Environment"),
 		SMTO_ABORTIFHUNG, 5000, nullptr);
+*/
 }
 
 } // namespace shimmer

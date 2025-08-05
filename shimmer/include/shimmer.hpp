@@ -32,7 +32,7 @@ private:
 	void init();
 	void create(const std::string& name, const std::string& target, ShimMode mode);
 	void update(const std::string& target, ShimMode mode);
-	void remove();
+	void remove(std::string target);
 	void list();
 	void rebuild();
 	void version();

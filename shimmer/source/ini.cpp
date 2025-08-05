@@ -184,6 +184,47 @@ bool Ini::add(const Shim& shim)
 
 bool Ini::remove(const std::string& alias)
 {
+	std::filesystem::path shimExePath = iniPath.parent_path() / (alias + ".exe");
+
+	char exePathRaw[MAX_PATH];
+	GetModuleFileNameA(NULL, exePathRaw, MAX_PATH);
+	std::filesystem::path currentExePath(exePathRaw);
+
+	if (_stricmp(shimExePath.filename().string().c_str(), "shimmer.exe") == 0 &&
+		std::filesystem::equivalent(shimExePath, currentExePath))
+	{
+		MessageBoxA(NULL, "Cannot remove shimmer itself.", "Remove Failed", MB_OK | MB_ICONERROR);
+		return false;
+	}
+
+	if (std::filesystem::equivalent(shimExePath, currentExePath))
+	{
+		std::string cmd =
+			"cmd.exe /C \""
+			"ping -n 3 127.0.0.1 > nul && "
+			"del /F /Q \"" + shimExePath.string() + "\"\"";
+
+		STARTUPINFOA si = { sizeof(si) };
+		PROCESS_INFORMATION pi;
+		if (!CreateProcessA(NULL, cmd.data(), NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi)) {
+			std::string msg = "Failed to schedule deletion of: " + shimExePath.string();
+			MessageBoxA(NULL, msg.c_str(), "Delete Failed", MB_OK | MB_ICONERROR);
+		}
+		else {
+			CloseHandle(pi.hProcess);
+			CloseHandle(pi.hThread);
+		}
+	}
+	else
+	{
+		std::error_code ec;
+		std::filesystem::remove(shimExePath, ec);
+		if (ec) {
+			std::string msg = "Failed to delete shim file: " + shimExePath.string() + "\n" + ec.message();
+			MessageBoxA(NULL, msg.c_str(), "Delete Failed", MB_OK | MB_ICONERROR);
+		}
+	}
+
 	auto it = std::remove_if(shims.begin(), shims.end(),
 		[&](const Shim& s)
 		{
