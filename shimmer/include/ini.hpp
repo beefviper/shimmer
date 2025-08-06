@@ -9,7 +9,6 @@
 #include <string>
 #include <filesystem>
 
-#include "mode.hpp"
 #include "registry.hpp"
 
 namespace shim
