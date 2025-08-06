@@ -10,24 +10,26 @@
 
 #include "mode.hpp"
 
-namespace shimmer
+namespace shim
 {
 
 static constexpr const char* REG_INSTALLED_PATH = "InstalledPath";
 static constexpr const char* SHIMMER_VERSION = "0.1.0";
 
-static ShimMode parseMode(const std::string& modeStr)
+shim::ShimMode parseMode(const std::string& modeStr)
 {
 	if (modeStr == "detached")
 	{
-		return ShimMode::Detached;
+		return shim::ShimMode::Detached;
 	}
-	return ShimMode::Wait;
+	return shim::ShimMode::Wait;
 }
 
-static std::string joinArgs(int argc, char* argv[]) {
+std::string joinArgs(int argc, char* argv[])
+{
 	std::string joined;
-	for (int i = 1; i < argc; ++i) {
+	for (int i = 1; i < argc; ++i)
+	{
 		if (i > 1) joined += " ";
 		joined += "\"";
 		joined += argv[i];
@@ -36,7 +38,7 @@ static std::string joinArgs(int argc, char* argv[]) {
 	return joined;
 }
 
-Shimmer::Shimmer(int argc, char* argv[])
+Shimmer::Shimmer()
 {
 	char exePathRaw[MAX_PATH];
 	GetModuleFileNameA(NULL, exePathRaw, MAX_PATH);
@@ -45,120 +47,6 @@ Shimmer::Shimmer(int argc, char* argv[])
 	currentExeName = exePath.stem().string();
 	currentExeDir = exePath.parent_path();
 
-	if (_stricmp(currentExeName.c_str(), "shimmer") == 0 && argc < 2)
-	{
-		printHelp();
-		return;
-	}
-
-	std::string command = argc > 1 ? argv[1] : "";
-	if (command != "--install" && command != "--uninstall" && command != "--init")
-	{
-		ini = std::make_unique<Ini>();
-	}
-	else if (command == "--init")
-	{
-		ini = std::make_unique<Ini>(registry.read("InstalledPath"));
-	}
-
-	if (command == "--install")
-	{
-		install();
-	}
-	else if (command == "--uninstall")
-	{
-		uninstall();
-	}
-	else if (command == "--init")
-	{
-		init();
-	}
-	else if (command == "--create" && argc > 3)
-	{
-		std::string name = argv[2];
-		std::string target = argv[3];
-		ShimMode mode = ShimMode::Wait;
-		if (argc > 4) {
-			mode = parseMode(argv[4]);
-		}
-		create(name, target, mode);
-	}
-	else if (command == "--update" && argc > 2)
-	{
-		std::string target = argv[2];
-		ShimMode mode = ShimMode::Wait;
-		if (argc > 3) {
-			mode = parseMode(argv[3]);
-		}
-		update(target, mode);
-	}
-	else if (command == "--remove")
-	{
-		std::string target = currentExeName;
-
-		if (argc > 2)
-		{
-			target = argv[2];
-		}
-
-		if (target == "shimmer")
-		{
-					MessageBoxA(NULL, "Cannot remove the shimmer executable itself.", "Error", MB_OK | MB_ICONERROR);
-					return;
-		}
-
-		remove(target);
-	}
-	else if (command == "--list")
-	{
-		list();
-	}
-	else if (command == "--rebuild")
-	{
-		rebuild();
-	}
-	else if (command == "--version")
-	{
-		version();
-	}
-	else
-	{
-		auto shims = ini->getShims();
-		auto it = std::find_if(shims.begin(), shims.end(),
-			[&](const Shim& shim) { return shim.alias == currentExeName; });
-
-		if (it == shims.end())
-		{
-			MessageBoxA(NULL, ("Shim not found: " + it->alias).c_str(), "Error", MB_OK | MB_ICONERROR);
-			return;
-		}
-
-		std::string args = joinArgs(argc, argv);
-		std::string commandLine = "\"" + it->program + "\" " + args;
-
-		STARTUPINFOA startupInfo = { sizeof(startupInfo)};
-		PROCESS_INFORMATION processInfo = {};
-
-		if (!CreateProcessA(NULL, &commandLine[0], NULL, NULL, FALSE, 0 , NULL, NULL, &startupInfo, &processInfo))
-		{
-			MessageBoxA(NULL, ("Failed to launch: " + it->program).c_str(), "Launch Error", MB_OK | MB_ICONERROR);
-			return;
-		}
-
-		if (it->mode == ShimMode::Detached)
-		{
-			CloseHandle(processInfo.hProcess);
-			CloseHandle(processInfo.hThread);
-			return;
-		}
-
-		WaitForSingleObject(processInfo.hProcess, INFINITE);
-		DWORD exitCode;
-		GetExitCodeProcess(processInfo.hProcess, &exitCode);
-		CloseHandle(processInfo.hProcess);
-		CloseHandle(processInfo.hThread);
-		return;
-	}
 }
 
 void Shimmer::install()
@@ -200,7 +88,7 @@ void Shimmer::uninstall()
 	}
 }
 
-void Shimmer::init()
+void Shimmer::init() const
 {
 	auto iniPath = ini->getPath();
 	if (std::filesystem::exists(iniPath))
@@ -214,37 +102,38 @@ void Shimmer::init()
 	}
 }
 
-void Shimmer::create(const std::string& name, const std::string& target, ShimMode mode)
+void Shimmer::create(const std::string& name, const std::string& target, ShimMode mode) const
 {
 	ini->add({ name, target, mode });
 }
 
-void Shimmer::update(const std::string& target, ShimMode mode)
+void Shimmer::update(const std::string& target, ShimMode mode) const
 {
 	ini->add({ currentExeName, target, mode });
 }
 
-void Shimmer::remove(std::string target)
+void Shimmer::remove(std::string target) const
 {
 	ini->remove(target);
 }
 
-void Shimmer::list()
+void Shimmer::list() const
 {
 	ini->list();
 }
 
-void Shimmer::rebuild()
+void Shimmer::rebuild() const
 {
 	ini->rebuild();
 }
 
-void Shimmer::version()
+void Shimmer::version() const
 {
 	std::cout << "Shimmer version: " << SHIMMER_VERSION << std::endl;
 }
 
-void Shimmer::printHelp() {
+void Shimmer::printHelp() const
+{
 	std::cout << R"(
 shimmer: Single EXE-based portable app shim system
 
@@ -262,4 +151,4 @@ Usage:
 )";
 }
 
-} // namespace shimmer
+} // namespace shim

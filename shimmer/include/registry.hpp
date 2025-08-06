@@ -9,7 +9,7 @@
 
 #include <Windows.h>
 
-namespace shimmer
+namespace shim
 {
 
 class Registry
@@ -32,4 +32,4 @@ private:
 	HKEY hKey{ nullptr };
 };
 
-} // namespace shimmer
+} // namespace shim

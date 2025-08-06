@@ -8,7 +8,7 @@
 #include <iostream>
 #include <fstream>
 
-namespace shimmer
+namespace shim
 {
 
 static std::string trim(const std::string str)
@@ -276,4 +276,4 @@ void Ini::writeDefault() const
 	file << "# dolphin = \"c:\\progs\\emu\\dolphin\\dolphin.exe\" | detached\n";
 }
 
-} // namespace shimmer
+} // namespace shim

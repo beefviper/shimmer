@@ -11,7 +11,7 @@
 
 #include "registry.hpp"
 
-namespace shimmer
+namespace shim
 {
 
 class Path
@@ -32,4 +32,4 @@ private:
 	void broadcastChange();
 };
 
-} // namespace shimmer
+} // namespace shim

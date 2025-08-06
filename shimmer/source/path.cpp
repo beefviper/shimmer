@@ -11,7 +11,7 @@
 
 #include <Windows.h>
 
-namespace shimmer
+namespace shim
 {
 
 static constexpr const char* REG_PATH_VALUE = "PATH";
@@ -109,4 +109,4 @@ void Path::broadcastChange()
 */
 }
 
-} // namespace shimmer
+} // namespace shim

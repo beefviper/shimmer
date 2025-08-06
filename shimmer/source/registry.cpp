@@ -7,7 +7,7 @@
 
 #include <iostream>
 
-namespace shimmer
+namespace shim
 {
 
 Registry::Registry(const std::string& subKey, REGSAM access)
@@ -103,4 +103,4 @@ void Registry::clear(const std::string& valueName) const
 	write(valueName, "");
 }
 
-} // namespace shimmer
+} // namespace shim

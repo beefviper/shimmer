@@ -12,8 +12,14 @@
 #include "mode.hpp"
 #include "registry.hpp"
 
-namespace shimmer
+namespace shim
 {
+
+enum class ShimMode
+{
+	Wait,
+	Detached
+};
 
 struct Shim
 {
@@ -44,4 +50,4 @@ private:
 	std::vector<Shim> shims;
 };
 
-} // namespace shimmer
+} // namespace shim

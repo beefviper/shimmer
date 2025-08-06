@@ -27,7 +27,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\ini.hpp" />
-    <ClInclude Include="include\mode.hpp" />
     <ClInclude Include="include\path.hpp" />
     <ClInclude Include="include\registry.hpp" />
     <ClInclude Include="include\shimmer.hpp" />

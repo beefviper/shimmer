@@ -11,32 +11,35 @@
 #include "ini.hpp"
 #include "path.hpp"
 
-namespace shimmer
+namespace shim
 {
+
+shim::ShimMode parseMode(const std::string& modeStr);
+std::string joinArgs(int argc, char* argv[]);
 
 class Shimmer
 {
 public:
-	Shimmer(int argc, char* argv[]);
+	Shimmer();
 
-private:
+	void install();
+	void uninstall();
+	void init() const;
+	void create(const std::string& name, const std::string& target, ShimMode mode) const;
+	void update(const std::string& target, ShimMode mode) const;
+	void remove(std::string target) const;
+	void list() const;
+	void rebuild() const;
+	void version() const;
+	void printHelp() const;
+
+//private:
 	Registry registry{ "Software\\Shimmer" };
 	Path paths;
 	std::unique_ptr <Ini> ini{};
 
 	std::string currentExeName{};
 	std::filesystem::path currentExeDir{};
-
-	void install();
-	void uninstall();
-	void init();
-	void create(const std::string& name, const std::string& target, ShimMode mode);
-	void update(const std::string& target, ShimMode mode);
-	void remove(std::string target);
-	void list();
-	void rebuild();
-	void version();
-	void printHelp();
 };
 
-} // namespace shimmer
+} // namespace shim
