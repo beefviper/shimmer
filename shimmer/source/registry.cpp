@@ -68,7 +68,7 @@ std::string Registry::read(const std::string& valueName) const
 	queryResult = RegQueryValueExA(hKey, valueName.c_str(), nullptr, &type, reinterpret_cast<LPBYTE>(buffer.data()), &size);
 	if (queryResult == ERROR_SUCCESS && (type == REG_SZ || type == REG_EXPAND_SZ))
 	{
-		if (size > 0 && buffer[size - 1] == '\0')
+		if (size > 0 && buffer[static_cast<size_t>(size) - 1] == '\0')
 		{
 			--size;
 		}

@@ -258,7 +258,33 @@ void Ini::list() const
 
 void Ini::rebuild() const
 {
+	if (shims.empty())
+	{
+		std::cout << "No shims to rebuild." << std::endl;
+		return;
+	}
 
+	char exePathRaw[MAX_PATH];
+	GetModuleFileNameA(NULL, exePathRaw, MAX_PATH);
+	std::filesystem::path currentExePath(exePathRaw);
+
+	for (const Shim& shim : shims)
+	{
+		std::filesystem::path targetPath = iniPath.parent_path() / (shim.alias + ".exe");
+		try
+		{
+			std::filesystem::copy_file(
+				currentExePath,
+				targetPath,
+				std::filesystem::copy_options::overwrite_existing
+			);
+			std::cout << "Rebuilt shim: " << shim.alias << " -> " << targetPath << std::endl;
+		}
+		catch (const std::filesystem::filesystem_error& e)
+		{
+			MessageBoxA(NULL, e.what(), "Rebuild Failed", MB_OK | MB_ICONERROR);
+		}
+	}
 }
 
 void Ini::writeDefault() const

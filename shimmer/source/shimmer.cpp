@@ -8,8 +8,6 @@
 #include <iostream>
 #include <string>
 
-#include "mode.hpp"
-
 namespace shim
 {
 
